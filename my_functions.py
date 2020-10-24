@@ -10,21 +10,32 @@ def prepare_deck():
 
     one_deck=cards_type*4
 
-    num_decks=enter_num_decks()
-    deck_in_game_initial=list(one_deck)*num_decks
+    num_decks_temp = enter_num_decks()
+    deck_in_game_initial=list(one_deck)*num_decks_temp
     current_deck=deck_in_game_initial*1 #This to create a copy and be sure they are not linked
     random.shuffle(current_deck)
     card_drawer=iter(current_deck)
 
-    return card_drawer
+    return card_drawer, num_decks_temp, deck_in_game_initial
 
+def reload_drawer(card_drawer, game_counter, num_decks, deck_in_game_initial):
 
+    '''
+    Function to reload deck when deck is more or less half spent.
+    Assumed every round it is spent on average 6 cards.
+    If 1 deck is used, deck is reloaded every 5 rounds.
+    '''
+    divisor = num_decks * 5
 
+    if game_counter % divisor == 0:
 
-
-
-
-
+        print(f'This is round {game_counter}. Deck is reloaded and shuffled again')
+        current_deck=deck_in_game_initial*1
+        random.shuffle(current_deck)
+        card_drawer=iter(current_deck)
+        return card_drawer
+    else:
+        return card_drawer
 
 
 
@@ -99,7 +110,7 @@ def get_count(card_list):
 
 
     count = 0
-    
+
     card_list=reorder_aces(card_list) #This is needed to deal with Aces
     for card in card_list:
         if card != 'A':
@@ -109,7 +120,11 @@ def get_count(card_list):
                 count += card_values['A']
             else:
                 count += 1
+    
     return count
+
+
+
 
 def initial_user_two_cards(card_drawer):
     '''
@@ -154,14 +169,42 @@ def dealer_play(dealer_cards,card_drawer):
             print(f'Dealer\'s count is now {dealer_count}')
             print(f'Count is below 17, therefore dealer decides to hit one more card')
             
-def who_win(user_count, dealer_count):
+def who_win(user_count, dealer_count, user_wins, dealer_wins):
     if dealer_count > 21:
         print('Congratulations!! You won!')
         print(f'Dealer exceeded 21. Dealer got {dealer_count}')
+        return user_wins + 1, dealer_wins
+
     elif dealer_count < user_count:
         print('Congratulations!! You won!')
         print(f'Dealer got {dealer_count} ... but you got {user_count}!!')
-    else:
+        return user_wins + 1, dealer_wins
+
+    elif user_count < dealer_count:
         print('You lose!!')
         print(f'Dealer got {dealer_count} ... but you got {user_count}....')
         print(f'It is so sad a machine outplayed you...')
+        return user_wins, dealer_wins + 1
+    else:
+        print('it was a tie!!')
+        print(f'Dealer got {dealer_count} ... but you got {user_count}....')
+        return user_wins, dealer_wins
+
+
+
+def new_round_continue(user_wins, dealer_wins, game_counter):
+    answer=input('What do you want to do next?\nPress 0 for a new round\nPress 1 for review statistics on this game\nPress 2 for a total new game\nPress other key to escape.')
+    if answer == '0':
+        return True
+
+    elif answer == '1':
+        tie_rounds = game_counter - (user_wins + dealer_wins)
+        print(f'Total number of rounds: {game_counter} rounds.\n User wins:  {user_wins} rounds.\n Dealer wins: {dealer_wins} rounds.\n Tie rounds: {tie_rounds} rounds')
+        new_round_continue(user_wins, dealer_wins, game_counter)
+        time.sleep(2)
+    elif answer == '2':
+        return False
+
+    else:
+        exit()    
+
