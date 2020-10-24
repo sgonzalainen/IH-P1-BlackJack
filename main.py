@@ -4,16 +4,12 @@ import time
 
 this_game = True
 
-while this_game == True:
-    game_counter = 0
-    user_wins = 0
-    dealer_wins = 0
+while this_game==True:
+    game_counter=0
+    user_wins=0
+    dealer_wins=0
     
-    game_counter = 0
-    user_wins = 0
-    dealer_wins = 0
 
-    
 
     card_drawer, num_decks, deck_in_game_initial = myf.prepare_deck()
     print('Game is ready to start. May the force be with you')
@@ -28,8 +24,9 @@ while this_game == True:
 
         card_drawer=myf.reload_drawer(card_drawer, game_counter, num_decks, deck_in_game_initial)
 
+        game_counter += 1
 
-        print('New round!!!')
+        print(f'Round {game_counter}...Fight!!!')
         time.sleep(1)
         print('Here comes your first two cards...')
         time.sleep(1)
@@ -51,6 +48,7 @@ while this_game == True:
 
         if user_count > 21:
             print(f'You lose!! Sorry but you exceeded 21.\nYou got a total number of {user_count}')
+            myf.play_sound('defeat')
             dealer_wins += 1
         else:
             print('Now is time for the dealer.')
@@ -58,9 +56,10 @@ while this_game == True:
             dealer_count=myf.get_count(dealer_cards)
             user_wins, dealer_wins = myf.who_win(user_count, dealer_count, user_wins, dealer_wins)
 
-        game_counter += 1
+        
 
         new_round = myf.new_round_continue(user_wins, dealer_wins, game_counter) #If this returns False it means user wants a new game, not a new round
+        print(new_round)
 
 
 

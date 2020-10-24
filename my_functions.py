@@ -2,6 +2,9 @@
 import random
 import time
 
+import subprocess #for playing sound
+
+
 card_values={'A':11,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':10,'Q':10,'K':10}
 
 
@@ -15,6 +18,7 @@ def prepare_deck():
     current_deck=deck_in_game_initial*1 #This to create a copy and be sure they are not linked
     random.shuffle(current_deck)
     card_drawer=iter(current_deck)
+    play_sound('shuffle')
 
     return card_drawer, num_decks_temp, deck_in_game_initial
 
@@ -27,15 +31,40 @@ def reload_drawer(card_drawer, game_counter, num_decks, deck_in_game_initial):
     '''
     divisor = num_decks * 5
 
-    if game_counter % divisor == 0:
+    if (game_counter % divisor == 0) and (game_counter != 0):
 
-        print(f'This is round {game_counter}. Deck is reloaded and shuffled again')
+        print(f'You have played already {game_counter} rounds.\nThe casino does not want you to count cards. Hence, deck is reloaded and shuffled again')
         current_deck=deck_in_game_initial*1
         random.shuffle(current_deck)
         card_drawer=iter(current_deck)
+        play_sound('shuffle')
         return card_drawer
     else:
         return card_drawer
+
+def play_sound(sound):
+    if sound == 'win':
+        bashCommand = "play -q sounds/win.wav -t alsa"
+
+    elif sound == 'defeat':
+        bashCommand = "play -q sounds/gameover.wav -t alsa"
+
+    elif sound == 'tie':
+        bashCommand = "play -q sounds/tie.wav -t alsa"
+
+    elif sound == 'draw':
+        bashCommand = "play -q sounds/draw.wav -t alsa"
+
+    elif sound == 'shuffle':
+        bashCommand = "play -q sounds/shuffle.wav -t alsa"
+
+    # How to solve the problem of getting warn t alsa on bash
+    #https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1057438.html
+
+    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
+        
+
 
 
 
@@ -61,6 +90,8 @@ def draw_card(card_drawer):
     Output: The next item in the deck
     '''
     card_drawn=next(card_drawer)
+    play_sound('draw')
+
     print(f'The card is a....{card_drawn}!!')
     return card_drawn
 
@@ -145,6 +176,7 @@ def check_user_game(user_cards):
     user_count=get_count(user_cards)
     
     if user_count > 21:
+        play_sound('gameover')
         print(f'You lose!! Sorry but you exceeded 21.\n You got a total number of {user_count}')
         return False
     else:
@@ -173,21 +205,26 @@ def who_win(user_count, dealer_count, user_wins, dealer_wins):
     if dealer_count > 21:
         print('Congratulations!! You won!')
         print(f'Dealer exceeded 21. Dealer got {dealer_count}')
+        play_sound('win')
         return user_wins + 1, dealer_wins
 
     elif dealer_count < user_count:
         print('Congratulations!! You won!')
         print(f'Dealer got {dealer_count} ... but you got {user_count}!!')
+        play_sound('win')
         return user_wins + 1, dealer_wins
 
     elif user_count < dealer_count:
         print('You lose!!')
         print(f'Dealer got {dealer_count} ... but you got {user_count}....')
         print(f'It is so sad a machine outplayed you...')
+        play_sound('defeat')
         return user_wins, dealer_wins + 1
     else:
+        
         print('it was a tie!!')
         print(f'Dealer got {dealer_count} ... but you got {user_count}....')
+        play_sound('tie')
         return user_wins, dealer_wins
 
 
@@ -200,7 +237,7 @@ def new_round_continue(user_wins, dealer_wins, game_counter):
     elif answer == '1':
         tie_rounds = game_counter - (user_wins + dealer_wins)
         print(f'Total number of rounds: {game_counter} rounds.\n User wins:  {user_wins} rounds.\n Dealer wins: {dealer_wins} rounds.\n Tie rounds: {tie_rounds} rounds')
-        new_round_continue(user_wins, dealer_wins, game_counter)
+        return new_round_continue(user_wins, dealer_wins, game_counter)
         time.sleep(2)
     elif answer == '2':
         return False
